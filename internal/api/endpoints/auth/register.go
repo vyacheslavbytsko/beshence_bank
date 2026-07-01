@@ -21,7 +21,7 @@ func RegisterV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if deps == nil || deps.DB == nil || deps.AccessJWTManager == nil || deps.RefreshJWTManager == nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"success": false,
+
 				"errcode": -1,
 				"error":   "auth is not configured",
 			})
@@ -31,7 +31,7 @@ func RegisterV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		var request registerRequest
 		if err := c.ShouldBindJSON(&request); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"success": false,
+
 				"errcode": -1,
 				"error":   "invalid request body",
 			})
@@ -41,7 +41,7 @@ func RegisterV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		passwordHash, err := auth.HashPassword(request.Password)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"success": false,
+
 				"errcode": -1,
 				"error":   "failed to hash password",
 			})
@@ -56,7 +56,7 @@ func RegisterV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		if err := deps.DB.Create(&account).Error; err != nil {
 			if errors.Is(err, gorm.ErrDuplicatedKey) {
 				c.JSON(http.StatusConflict, gin.H{
-					"success": false,
+
 					"errcode": -1,
 					"error":   "username is already taken",
 				})
@@ -64,7 +64,7 @@ func RegisterV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 			}
 
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"success": false,
+
 				"errcode": -1,
 				"error":   "failed to create account",
 			})
@@ -74,7 +74,7 @@ func RegisterV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		tokens, err := auth.IssueTokenPairForNewSession(deps.DB, deps.RefreshJWTManager, deps.AccessJWTManager, account, c.GetHeader("User-Agent"))
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"success": false,
+
 				"errcode": -1,
 				"error":   "failed to generate tokens",
 			})
@@ -82,7 +82,7 @@ func RegisterV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusCreated, gin.H{
-			"success":       true,
+			"errcode":       0,
 			"id":            account.ID,
 			"username":      account.Username,
 			"refresh_token": tokens.RefreshToken,

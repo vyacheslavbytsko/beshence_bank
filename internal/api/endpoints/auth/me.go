@@ -15,7 +15,7 @@ func MeV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if deps == nil || deps.DB == nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"success": false,
+
 				"errcode": -1,
 				"error":   "database is not configured",
 			})
@@ -25,7 +25,7 @@ func MeV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		accountID, ok := middleware.GetCurrentAccount(c)
 		if !ok {
 			c.JSON(http.StatusUnauthorized, gin.H{
-				"success": false,
+
 				"errcode": -1,
 				"error":   "unauthorized",
 			})
@@ -36,7 +36,6 @@ func MeV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		if err := deps.DB.Select("id", "username").Where("id = ?", accountID).First(&account).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				c.JSON(http.StatusUnauthorized, gin.H{
-					"success": false,
 					"errcode": -1,
 					"error":   "unauthorized",
 				})
@@ -44,7 +43,6 @@ func MeV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 			}
 
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"success": false,
 				"errcode": -1,
 				"error":   "failed to load account",
 			})
@@ -52,7 +50,7 @@ func MeV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			"success":  true,
+			"errcode":  0,
 			"id":       account.ID,
 			"username": account.Username,
 		})

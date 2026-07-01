@@ -90,7 +90,7 @@ func RefreshV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			"success":       true,
+			"errcode":       0,
 			"id":            account.ID,
 			"username":      account.Username,
 			"refresh_token": tokens.RefreshToken,

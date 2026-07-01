@@ -8,7 +8,7 @@ import (
 
 func PingV1dot0(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
-		"success": true,
+		"errcode": 0,
 		"ping":    "beshence-pong!",
 		"api": gin.H{
 			"urls":     []string{"https://127.0.0.1:27462/api"},

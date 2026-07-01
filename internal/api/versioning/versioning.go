@@ -44,7 +44,7 @@ func VersionEndpoint(g *gin.RouterGroup, versionedEndpoints VersionedEndpoints, 
 		requestedIndex, ok := versionIndex[version]
 		if !ok {
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-				"success": false,
+
 				"errcode": -1,
 				"message": fmt.Sprintf("unsupported API version: %s", version),
 			})
@@ -69,7 +69,7 @@ func VersionEndpoint(g *gin.RouterGroup, versionedEndpoints VersionedEndpoints, 
 				for _, endpoints := range methods {
 					if _, exists := endpoints[endpoint]; exists {
 						c.AbortWithStatusJSON(http.StatusMethodNotAllowed, gin.H{
-							"success": false,
+
 							"errcode": -1,
 							"message": fmt.Sprintf("method %s is not available for endpoint %s in version %s or earlier", method, endpoint, version),
 						})
@@ -80,7 +80,7 @@ func VersionEndpoint(g *gin.RouterGroup, versionedEndpoints VersionedEndpoints, 
 		}
 
 		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
-			"success": false,
+
 			"errcode": -1,
 			"message": fmt.Sprintf("endpoint %s is not available for version %s or earlier", endpoint, version),
 		})
