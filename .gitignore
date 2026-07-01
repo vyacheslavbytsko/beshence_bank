@@ -3,3 +3,7 @@
 *.ipr
 *.iws
 .idea/
+
+.env
+docker-compose.yml
+compose.yml
