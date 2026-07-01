@@ -4,6 +4,7 @@ import (
 	"bank/internal/api/misc"
 	"bank/internal/config"
 	"bank/internal/database"
+	"bank/internal/versioning"
 	"fmt"
 	"log"
 
@@ -25,6 +26,9 @@ func main() {
 
 	router := gin.Default()
 	router.GET(misc.EndpointWellKnownBank, misc.PingV1dot0)
+
+	api := router.Group("/api")
+	versioning.RegisterVersionedRoutes(api)
 
 	err = router.Run(":27462")
 	if err != nil {
