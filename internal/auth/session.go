@@ -15,7 +15,7 @@ type TokenPair struct {
 	RefreshToken string
 }
 
-func IssueTokenPairForNewSession(db *gorm.DB, accessJWTManager *JWT, refreshJWTManager *JWT, account models.Account, sessionName string) (TokenPair, error) {
+func IssueTokenPairForNewSession(db *gorm.DB, refreshJWTManager *JWT, accessJWTManager *JWT, account models.Account, sessionName string) (TokenPair, error) {
 	sessionName = normalizeSessionName(sessionName)
 
 	refreshTokenID := uuid.NewString()
@@ -31,7 +31,7 @@ func IssueTokenPairForNewSession(db *gorm.DB, accessJWTManager *JWT, refreshJWTM
 			return err
 		}
 
-		pair, err := generateTokenPairForSession(accessJWTManager, refreshJWTManager, account, session.ID, refreshTokenID)
+		pair, err := generateTokenPairForSession(refreshJWTManager, accessJWTManager, account, session.ID, refreshTokenID)
 		if err != nil {
 			return err
 		}
@@ -46,12 +46,12 @@ func IssueTokenPairForNewSession(db *gorm.DB, accessJWTManager *JWT, refreshJWTM
 	return tokens, nil
 }
 
-func IssueTokenPairForExistingSession(db *gorm.DB, accessJWTManager *JWT, refreshJWTManager *JWT, account models.Account, session models.Session, expectedRefreshTokenID string) (TokenPair, error) {
+func IssueTokenPairForExistingSession(db *gorm.DB, refreshJWTManager *JWT, accessJWTManager *JWT, account models.Account, session models.Session, expectedRefreshTokenID string) (TokenPair, error) {
 	refreshTokenID := uuid.NewString()
 
 	var tokens TokenPair
 	err := db.Transaction(func(tx *gorm.DB) error {
-		pair, err := generateTokenPairForSession(accessJWTManager, refreshJWTManager, account, session.ID, refreshTokenID)
+		pair, err := generateTokenPairForSession(refreshJWTManager, accessJWTManager, account, session.ID, refreshTokenID)
 		if err != nil {
 			return err
 		}
@@ -77,20 +77,20 @@ func IssueTokenPairForExistingSession(db *gorm.DB, accessJWTManager *JWT, refres
 	return tokens, nil
 }
 
-func generateTokenPairForSession(accessJWTManager *JWT, refreshJWTManager *JWT, account models.Account, sessionID string, refreshTokenID string) (TokenPair, error) {
-	accessToken, err := accessJWTManager.GenerateToken(sessionID, account.ID, refreshTokenID)
-	if err != nil {
-		return TokenPair{}, err
-	}
-
+func generateTokenPairForSession(refreshJWTManager *JWT, accessJWTManager *JWT, account models.Account, sessionID string, refreshTokenID string) (TokenPair, error) {
 	refreshToken, err := refreshJWTManager.GenerateToken(sessionID, account.ID, refreshTokenID)
 	if err != nil {
 		return TokenPair{}, err
 	}
 
+	accessToken, err := accessJWTManager.GenerateToken(sessionID, account.ID, refreshTokenID)
+	if err != nil {
+		return TokenPair{}, err
+	}
+
 	return TokenPair{
-		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
+		AccessToken:  accessToken,
 	}, nil
 }
 

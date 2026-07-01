@@ -2,8 +2,10 @@ package versioning
 
 import (
 	"bank/internal/api"
-	"bank/internal/api/endpoints/auth"
+	authend "bank/internal/api/endpoints/auth"
 	"bank/internal/api/endpoints/misc"
+	"bank/internal/auth"
+	"bank/internal/middleware"
 	"net/http"
 )
 
@@ -25,10 +27,13 @@ func GetVersionedEndpoints(deps *api.Dependencies) VersionedEndpoints {
 		VersionV1dot0: {
 			http.MethodGet: {
 				"/ping": misc.PingV1dot0,
+				// TODO: remove `auth.TokenTypeAccess`/`auth.TokenTypeRefresh` because manager can handle it... i guess..
+				"/auth/me":      middleware.RequireAuth(deps.AccessJWTManager, auth.TokenTypeAccess, authend.MeV1dot0(deps)),
+				"/auth/refresh": middleware.RequireAuth(deps.RefreshJWTManager, auth.TokenTypeRefresh, authend.RefreshV1dot0(deps)),
 			},
 			http.MethodPost: {
-				"/auth/register": auth.RegisterV1dot0(deps),
-				"/auth/login":    auth.LoginV1dot0(deps),
+				"/auth/register": authend.RegisterV1dot0(deps),
+				"/auth/login":    authend.LoginV1dot0(deps),
 			},
 		},
 	}

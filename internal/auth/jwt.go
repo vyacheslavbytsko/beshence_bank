@@ -47,7 +47,7 @@ func (m *JWT) GenerateToken(sessionID string, accountID string, refreshTokenID s
 	}
 
 	if m.typeID == TokenTypeRefresh {
-		claims["rtid"] = refreshTokenID
+		claims["rid"] = refreshTokenID
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -109,7 +109,7 @@ func ClaimsFromToken(claims jwt.MapClaims) (Claims, bool) {
 	refreshTokenID := ""
 	if tokenType == TokenTypeRefresh {
 		var refreshTokenIDOk bool
-		refreshTokenID, refreshTokenIDOk = claims["rtid"].(string)
+		refreshTokenID, refreshTokenIDOk = claims["rid"].(string)
 		if !refreshTokenIDOk || refreshTokenID == "" {
 			return Claims{}, false
 		}

@@ -71,7 +71,7 @@ func RegisterV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 			return
 		}
 
-		tokens, err := auth.IssueTokenPairForNewSession(deps.DB, deps.AccessJWTManager, deps.RefreshJWTManager, account, c.GetHeader("User-Agent"))
+		tokens, err := auth.IssueTokenPairForNewSession(deps.DB, deps.RefreshJWTManager, deps.AccessJWTManager, account, c.GetHeader("User-Agent"))
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"success": false,
@@ -85,8 +85,8 @@ func RegisterV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 			"success":       true,
 			"id":            account.ID,
 			"username":      account.Username,
-			"access_token":  tokens.AccessToken,
 			"refresh_token": tokens.RefreshToken,
+			"access_token":  tokens.AccessToken,
 		})
 	}
 }

@@ -90,9 +90,8 @@ func LoginV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 			"success":       true,
 			"id":            account.ID,
 			"username":      account.Username,
-			"token_type":    "Bearer",
-			"access_token":  tokens.AccessToken,
 			"refresh_token": tokens.RefreshToken,
+			"access_token":  tokens.AccessToken,
 		})
 	}
 }
