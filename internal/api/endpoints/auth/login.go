@@ -1,0 +1,98 @@
+package auth
+
+import (
+	"bank/internal/api"
+	"bank/internal/auth"
+	"errors"
+	"net/http"
+
+	"bank/internal/database/models"
+
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
+)
+
+type loginRequest struct {
+	Username string `json:"username" binding:"required,min=3,max=64"`
+	Password string `json:"password" binding:"required,min=8,max=128"`
+}
+
+func LoginV1dot0(deps *api.Dependencies) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if deps == nil || deps.DB == nil || deps.AccessJWTManager == nil || deps.RefreshJWTManager == nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"success": false,
+				"errcode": -1,
+				"error":   "auth is not configured",
+			})
+			return
+		}
+
+		var request loginRequest
+		if err := c.ShouldBindJSON(&request); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"errcode": -1,
+				"error":   "invalid request body",
+			})
+			return
+		}
+
+		var account models.Account
+		if err := deps.DB.Where("username = ?", request.Username).First(&account).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				c.JSON(http.StatusUnauthorized, gin.H{
+					"success": false,
+					"errcode": -1,
+					"error":   "invalid credentials",
+				})
+				return
+			}
+
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"success": false,
+				"errcode": -1,
+				"error":   "failed to load account",
+			})
+			return
+		}
+
+		ok, err := auth.VerifyPassword(request.Password, account.PasswordHash)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"success": false,
+				"errcode": -1,
+				"error":   "failed to verify password",
+			})
+			return
+		}
+
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"success": false,
+				"errcode": -1,
+				"error":   "invalid credentials",
+			})
+			return
+		}
+
+		tokens, err := auth.IssueTokenPairForNewSession(deps.DB, deps.AccessJWTManager, deps.RefreshJWTManager, account, c.GetHeader("User-Agent"))
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"success": false,
+				"errcode": -1,
+				"error":   "failed to generate tokens",
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"success":       true,
+			"id":            account.ID,
+			"username":      account.Username,
+			"token_type":    "Bearer",
+			"access_token":  tokens.AccessToken,
+			"refresh_token": tokens.RefreshToken,
+		})
+	}
+}

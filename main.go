@@ -1,11 +1,12 @@
 package main
 
 import (
-	"bank/internal/api/misc"
+	"bank/internal/api"
+	"bank/internal/api/endpoints/misc"
+	"bank/internal/api/versioning"
+	"bank/internal/auth"
 	"bank/internal/config"
 	"bank/internal/database"
-	"bank/internal/versioning"
-	"fmt"
 	"log"
 
 	"github.com/gin-gonic/gin"
@@ -22,13 +23,35 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Println(db) // temporary
+	if err := database.Migrate(db); err != nil {
+		log.Fatal(err)
+	}
+
+	refreshJWT := auth.NewJWTManager(
+		cfg.JWTSecret,
+		cfg.RefreshJWTTTLSeconds,
+		auth.TokenTypeRefresh,
+	)
+
+	accessJWT := auth.NewJWTManager(
+		cfg.JWTSecret,
+		cfg.AccessJWTTTLSeconds,
+		auth.TokenTypeAccess,
+	)
 
 	router := gin.Default()
-	router.GET(misc.EndpointWellKnownBank, misc.PingV1dot0)
+	router.GET("/.well-known/beshence/bank", misc.PingV1dot0)
 
-	api := router.Group("/api")
-	versioning.RegisterVersionedRoutes(api)
+	dependencies := api.NewDependencies(
+		db,
+		accessJWT,
+		refreshJWT,
+	)
+
+	versionedEndpoints := versioning.GetVersionedEndpoints(dependencies)
+
+	apiRoute := router.Group("/api")
+	versioning.RegisterVersionedRoutes(apiRoute, versionedEndpoints)
 
 	err = router.Run(":27462")
 	if err != nil {

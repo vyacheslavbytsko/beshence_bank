@@ -11,12 +11,10 @@ type EndpointsHandlers map[string]gin.HandlerFunc
 type MethodsEndpoints map[string]EndpointsHandlers
 type VersionedEndpoints map[string]MethodsEndpoints
 
-var defaultVersionedEndpoints = GetVersionedEndpoints()
-
-func RegisterVersionedRoutes(g *gin.RouterGroup) {
+func RegisterVersionedRoutes(g *gin.RouterGroup, versionedEndpoints VersionedEndpoints) {
 	seen := make(map[string]map[string]struct{})
 
-	for _, methods := range defaultVersionedEndpoints {
+	for _, methods := range versionedEndpoints {
 		for method, endpoints := range methods {
 			if seen[method] == nil {
 				seen[method] = make(map[string]struct{})
@@ -28,13 +26,13 @@ func RegisterVersionedRoutes(g *gin.RouterGroup) {
 				}
 
 				seen[method][endpoint] = struct{}{}
-				VersionEndpoint(g, method, endpoint)
+				VersionEndpoint(g, versionedEndpoints, method, endpoint)
 			}
 		}
 	}
 }
 
-func VersionEndpoint(g *gin.RouterGroup, method string, endpoint string, handlers ...gin.HandlerFunc) {
+func VersionEndpoint(g *gin.RouterGroup, versionedEndpoints VersionedEndpoints, method string, endpoint string, handlers ...gin.HandlerFunc) {
 	chain := make([]gin.HandlerFunc, 0, len(handlers)+1)
 	chain = append(chain, handlers...)
 	chain = append(chain, func(c *gin.Context) {
@@ -46,6 +44,8 @@ func VersionEndpoint(g *gin.RouterGroup, method string, endpoint string, handler
 		requestedIndex, ok := versionIndex[version]
 		if !ok {
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"errcode": -1,
 				"message": fmt.Sprintf("unsupported API version: %s", version),
 			})
 			return
@@ -53,7 +53,7 @@ func VersionEndpoint(g *gin.RouterGroup, method string, endpoint string, handler
 
 		for i := requestedIndex; i >= 0; i-- {
 			candidateVersion := supportedVersions[i]
-			if methods, ok := defaultVersionedEndpoints[candidateVersion]; ok {
+			if methods, ok := versionedEndpoints[candidateVersion]; ok {
 				if endpoints, ok := methods[method]; ok {
 					if handler, ok := endpoints[endpoint]; ok {
 						handler(c)
@@ -65,10 +65,12 @@ func VersionEndpoint(g *gin.RouterGroup, method string, endpoint string, handler
 
 		for i := requestedIndex; i >= 0; i-- {
 			candidateVersion := supportedVersions[i]
-			if methods, ok := defaultVersionedEndpoints[candidateVersion]; ok {
+			if methods, ok := versionedEndpoints[candidateVersion]; ok {
 				for _, endpoints := range methods {
 					if _, exists := endpoints[endpoint]; exists {
 						c.AbortWithStatusJSON(http.StatusMethodNotAllowed, gin.H{
+							"success": false,
+							"errcode": -1,
 							"message": fmt.Sprintf("method %s is not available for endpoint %s in version %s or earlier", method, endpoint, version),
 						})
 						return
@@ -78,6 +80,8 @@ func VersionEndpoint(g *gin.RouterGroup, method string, endpoint string, handler
 		}
 
 		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
+			"success": false,
+			"errcode": -1,
 			"message": fmt.Sprintf("endpoint %s is not available for version %s or earlier", endpoint, version),
 		})
 	})

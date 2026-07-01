@@ -1,0 +1,78 @@
+package auth
+
+import (
+	"crypto/rand"
+	"crypto/subtle"
+	"encoding/base64"
+	"errors"
+	"fmt"
+	"strings"
+
+	"golang.org/x/crypto/argon2"
+)
+
+const (
+	argonTime    uint32 = 3
+	argonMemory  uint32 = 64 * 1024
+	argonThreads uint8  = 2
+	argonKeyLen  uint32 = 32
+	saltLen             = 16
+)
+
+func HashPassword(password string) (string, error) {
+	salt := make([]byte, saltLen)
+	if _, err := rand.Read(salt); err != nil {
+		return "", err
+	}
+
+	hash := argon2.IDKey([]byte(password), salt, argonTime, argonMemory, argonThreads, argonKeyLen)
+
+	saltBase64 := base64.RawStdEncoding.EncodeToString(salt)
+	hashBase64 := base64.RawStdEncoding.EncodeToString(hash)
+
+	return fmt.Sprintf("$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s", argon2.Version, argonMemory, argonTime, argonThreads, saltBase64, hashBase64), nil
+}
+
+func VerifyPassword(password string, encodedHash string) (bool, error) {
+	parts := strings.Split(encodedHash, "$")
+	if len(parts) != 6 || parts[1] != "argon2id" {
+		return false, errors.New("invalid password hash format")
+	}
+
+	var version int
+	if _, err := fmt.Sscanf(parts[2], "v=%d", &version); err != nil {
+		return false, errors.New("invalid password hash version")
+	}
+	if version != argon2.Version {
+		return false, errors.New("incompatible password hash version")
+	}
+
+	var memory uint32
+	var timeCost uint32
+	var threads uint8
+	if _, err := fmt.Sscanf(parts[3], "m=%d,t=%d,p=%d", &memory, &timeCost, &threads); err != nil {
+		return false, errors.New("invalid password hash parameters")
+	}
+	if memory != argonMemory || timeCost != argonTime || threads != argonThreads {
+		return false, errors.New("incompatible password hash parameters")
+	}
+
+	salt, err := base64.RawStdEncoding.DecodeString(parts[4])
+	if err != nil {
+		return false, errors.New("invalid password hash salt")
+	}
+	if len(salt) != saltLen {
+		return false, errors.New("invalid password hash salt")
+	}
+
+	decodedHash, err := base64.RawStdEncoding.DecodeString(parts[5])
+	if err != nil {
+		return false, errors.New("invalid password hash data")
+	}
+	if len(decodedHash) != int(argonKeyLen) {
+		return false, errors.New("invalid password hash data")
+	}
+
+	calculatedHash := argon2.IDKey([]byte(password), salt, argonTime, argonMemory, argonThreads, argonKeyLen)
+	return subtle.ConstantTimeCompare(decodedHash, calculatedHash) == 1, nil
+}
