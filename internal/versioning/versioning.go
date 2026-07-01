@@ -7,9 +7,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type MethodsHandlers map[string]gin.HandlerFunc
-type EndpointsHandlers map[string]MethodsHandlers
-type VersionedEndpoints map[string]EndpointsHandlers
+type EndpointsHandlers map[string]gin.HandlerFunc
+type MethodsEndpoints map[string]EndpointsHandlers
+type VersionedEndpoints map[string]MethodsEndpoints
 
 var defaultVersionedEndpoints = GetVersionedEndpoints()
 
