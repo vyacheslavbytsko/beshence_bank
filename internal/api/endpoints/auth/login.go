@@ -21,7 +21,6 @@ func LoginV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if deps == nil || deps.DB == nil || deps.AccessJWTManager == nil || deps.RefreshJWTManager == nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
-
 				"errcode": -1,
 				"error":   "auth is not configured",
 			})
@@ -31,7 +30,6 @@ func LoginV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		var request loginRequest
 		if err := c.ShouldBindJSON(&request); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-
 				"errcode": -1,
 				"error":   "invalid request body",
 			})
@@ -42,7 +40,6 @@ func LoginV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		if err := deps.DB.Where("username = ?", request.Username).First(&account).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				c.JSON(http.StatusUnauthorized, gin.H{
-
 					"errcode": -1,
 					"error":   "invalid credentials",
 				})
@@ -50,7 +47,6 @@ func LoginV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 			}
 
 			c.JSON(http.StatusInternalServerError, gin.H{
-
 				"errcode": -1,
 				"error":   "failed to load account",
 			})
@@ -60,7 +56,6 @@ func LoginV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		ok, err := auth.VerifyPassword(request.Password, account.PasswordHash)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
-
 				"errcode": -1,
 				"error":   "failed to verify password",
 			})
@@ -69,7 +64,6 @@ func LoginV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 
 		if !ok {
 			c.JSON(http.StatusUnauthorized, gin.H{
-
 				"errcode": -1,
 				"error":   "invalid credentials",
 			})
@@ -79,7 +73,6 @@ func LoginV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		tokens, err := auth.IssueTokenPairForNewSession(deps.DB, deps.AccessJWTManager, deps.RefreshJWTManager, account, c.GetHeader("User-Agent"))
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
-
 				"errcode": -1,
 				"error":   "failed to generate tokens",
 			})
