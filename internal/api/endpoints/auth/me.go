@@ -30,8 +30,9 @@ func MeV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 			return
 		}
 
+		// TODO: use middleware
 		var account models.Account
-		if err := deps.DB.Select("id", "username").First(&account, accountID).Error; err != nil {
+		if err := deps.DB.Select("id", "username").Where("id = ?", accountID).First(&account).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				c.JSON(http.StatusUnauthorized, gin.H{
 					"errcode": -1,
