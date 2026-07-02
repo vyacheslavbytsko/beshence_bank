@@ -8,7 +8,7 @@ import (
 )
 
 type Account struct {
-	ID           string    `gorm:"type:char(36);primaryKey" json:"id"`
+	ID           uuid.UUID `gorm:"type:char(36);primaryKey" json:"id"`
 	Username     string    `gorm:"size:64;not null;uniqueIndex" json:"username"`
 	PasswordHash string    `gorm:"column:password_hash;not null" json:"-"`
 	CreatedAt    time.Time `json:"created_at"`
@@ -19,8 +19,8 @@ func (a *Account) TableName() string {
 }
 
 func (a *Account) BeforeCreate(_ *gorm.DB) error {
-	if a.ID == "" {
-		a.ID = uuid.NewString()
+	if a.ID == uuid.Nil {
+		a.ID = uuid.New()
 	}
 
 	return nil

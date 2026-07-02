@@ -18,7 +18,7 @@ type TokenPair struct {
 func IssueTokenPairForNewSession(db *gorm.DB, refreshJWTManager *JWT, accessJWTManager *JWT, account models.Account, sessionName string) (TokenPair, error) {
 	sessionName = normalizeSessionName(sessionName)
 
-	refreshTokenID := uuid.NewString()
+	refreshTokenID := uuid.New()
 	session := models.Session{
 		AccountID:      account.ID,
 		Name:           sessionName,
@@ -46,19 +46,19 @@ func IssueTokenPairForNewSession(db *gorm.DB, refreshJWTManager *JWT, accessJWTM
 	return tokens, nil
 }
 
-func IssueTokenPairForExistingSession(db *gorm.DB, refreshJWTManager *JWT, accessJWTManager *JWT, account models.Account, session models.Session, expectedRefreshTokenID string) (TokenPair, error) {
-	refreshTokenID := uuid.NewString()
+func IssueTokenPairForExistingSession(db *gorm.DB, refreshJWTManager *JWT, accessJWTManager *JWT, account models.Account, session models.Session, existingRefreshTokenID uuid.UUID) (TokenPair, error) {
+	newRefreshTokenID := uuid.New()
 
 	var tokens TokenPair
 	err := db.Transaction(func(tx *gorm.DB) error {
-		pair, err := generateTokenPairForSession(refreshJWTManager, accessJWTManager, account, session.ID, refreshTokenID)
+		pair, err := generateTokenPairForSession(refreshJWTManager, accessJWTManager, account, session.ID, newRefreshTokenID)
 		if err != nil {
 			return err
 		}
 
 		updateResult := tx.Model(&models.Session{}).
-			Where("id = ? AND account_id = ? AND refresh_token_id = ?", session.ID, account.ID, expectedRefreshTokenID).
-			Update("refresh_token_id", refreshTokenID)
+			Where("id = ? AND account_id = ? AND refresh_token_id = ?", session.ID, account.ID, existingRefreshTokenID).
+			Update("refresh_token_id", newRefreshTokenID)
 		if updateResult.Error != nil {
 			return updateResult.Error
 		}
@@ -77,7 +77,7 @@ func IssueTokenPairForExistingSession(db *gorm.DB, refreshJWTManager *JWT, acces
 	return tokens, nil
 }
 
-func generateTokenPairForSession(refreshJWTManager *JWT, accessJWTManager *JWT, account models.Account, sessionID string, refreshTokenID string) (TokenPair, error) {
+func generateTokenPairForSession(refreshJWTManager *JWT, accessJWTManager *JWT, account models.Account, sessionID uuid.UUID, refreshTokenID uuid.UUID) (TokenPair, error) {
 	refreshToken, err := refreshJWTManager.GenerateToken(sessionID, account.ID, refreshTokenID)
 	if err != nil {
 		return TokenPair{}, err

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 type JWT struct {
@@ -34,20 +35,20 @@ func NewJWTManager(secret string, ttl time.Duration, typeID TokenType) *JWT {
 	}
 }
 
-func (m *JWT) GenerateToken(sessionID string, accountID string, refreshTokenID string) (string, error) {
+func (m *JWT) GenerateToken(sessionID uuid.UUID, accountID uuid.UUID, refreshTokenID uuid.UUID) (string, error) {
 	now := time.Now().UTC()
 	expiresAt := now.Add(m.ttl)
 
 	claims := jwt.MapClaims{
-		"sub": sessionID,
-		"aid": accountID,
+		"sub": sessionID.String(),
+		"aid": accountID.String(),
 		"typ": string(m.typeID),
 		"iat": now.Unix(),
 		"exp": expiresAt.Unix(),
 	}
 
 	if m.typeID == TokenTypeRefresh {
-		claims["rid"] = refreshTokenID
+		claims["rid"] = refreshTokenID.String()
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

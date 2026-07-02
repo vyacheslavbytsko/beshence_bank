@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 const (
@@ -29,17 +30,17 @@ func GetCurrentAccount(c *gin.Context) (string, bool) {
 	return accountID, true
 }
 
-func GetCurrentSession(c *gin.Context) (string, string, bool) {
+func GetCurrentSession(c *gin.Context) (uuid.UUID, uuid.UUID, bool) {
 	sessionIDValue, sessionIDExists := c.Get(ContextAuthSessionIDKey)
 	refreshTokenIDValue, refreshTokenIDExists := c.Get(ContextAuthRefreshTokenIDKey)
 	if !sessionIDExists || !refreshTokenIDExists {
-		return "", "", false
+		return uuid.Nil, uuid.Nil, false
 	}
 
-	sessionID, sessionIDOk := sessionIDValue.(string)
-	refreshTokenID, refreshTokenIDOk := refreshTokenIDValue.(string)
-	if !sessionIDOk || !refreshTokenIDOk || sessionID == "" || refreshTokenID == "" {
-		return "", "", false
+	sessionID, sessionIDOk := sessionIDValue.(uuid.UUID)
+	refreshTokenID, refreshTokenIDOk := refreshTokenIDValue.(uuid.UUID)
+	if !sessionIDOk || !refreshTokenIDOk || sessionID == uuid.Nil || refreshTokenID == uuid.Nil {
+		return uuid.Nil, uuid.Nil, false
 	}
 
 	return sessionID, refreshTokenID, true

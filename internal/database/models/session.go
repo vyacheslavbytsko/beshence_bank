@@ -8,10 +8,10 @@ import (
 )
 
 type Session struct {
-	ID             string    `gorm:"type:char(36);primaryKey" json:"id"`
-	AccountID      string    `gorm:"column:account_id;type:char(36);not null;index" json:"account_id"`
+	ID             uuid.UUID `gorm:"type:char(36);primaryKey" json:"id"`
+	AccountID      uuid.UUID `gorm:"column:account_id;type:char(36);not null;index" json:"account_id"`
 	Name           string    `gorm:"size:255;not null" json:"name"`
-	RefreshTokenID string    `gorm:"column:refresh_token_id;type:char(36);not null" json:"refresh_token_id"`
+	RefreshTokenID uuid.UUID `gorm:"column:refresh_token_id;type:char(36);not null" json:"refresh_token_id"`
 	CreatedAt      time.Time `json:"created_at"`
 
 	Account Account `gorm:"foreignKey:AccountID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"-"`
@@ -22,8 +22,8 @@ func (s *Session) TableName() string {
 }
 
 func (s *Session) BeforeCreate(_ *gorm.DB) error {
-	if s.ID == "" {
-		s.ID = uuid.NewString()
+	if s.ID == uuid.Nil {
+		s.ID = uuid.New()
 	}
 
 	return nil
