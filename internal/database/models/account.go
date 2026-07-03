@@ -9,7 +9,7 @@ import (
 
 type Account struct {
 	ID           uuid.UUID `gorm:"column:id;type:char(36);primaryKey" json:"id"`
-	Username     string    `gorm:"column:username;size:64;not null" json:"username"`
+	Username     string    `gorm:"column:username;size:64;not null;unique" json:"username"`
 	PasswordHash string    `gorm:"column:password_hash;not null" json:"-"`
 	CreatedAt    time.Time `gorm:"column:created_at;not null" json:"created_at"`
 }
