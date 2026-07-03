@@ -17,9 +17,8 @@ var (
 )
 
 type Chain struct {
-	ID          uuid.UUID  `gorm:"column:id;type:char(36);primaryKey" json:"id"`
-	Name        string     `gorm:"column:name;size:128;not null" json:"name"`
-	VaultID     uuid.UUID  `gorm:"column:vault_id;type:char(36);not null" json:"vault_id"`
+	Name        string     `gorm:"column:name;size:128;primaryKey" json:"name"`
+	VaultID     uuid.UUID  `gorm:"column:vault_id;type:char(36);primaryKey" json:"vault_id"`
 	LastEventID *uuid.UUID `gorm:"column:last_event_id;type:char(36)" json:"last_event_id,omitempty"`
 	CreatedAt   time.Time  `gorm:"column:created_at;not null" json:"created_at"`
 
@@ -32,10 +31,6 @@ func (c *Chain) TableName() string {
 }
 
 func (c *Chain) BeforeCreate(_ *gorm.DB) error {
-	if c.ID == uuid.Nil {
-		c.ID = uuid.New()
-	}
-
 	return c.Validate()
 }
 

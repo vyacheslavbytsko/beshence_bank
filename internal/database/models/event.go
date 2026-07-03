@@ -9,8 +9,8 @@ import (
 
 type Event struct {
 	ID        uuid.UUID  `gorm:"column:id;type:char(36);primaryKey" json:"event_id"`
-	ChainID   uuid.UUID  `gorm:"column:chain_id;type:char(36);not null;index:idx_events_chain_parent,priority:1" json:"chain_id"`
-	ParentID  *uuid.UUID `gorm:"column:parent_id;type:char(36);index:idx_events_chain_parent,priority:2" json:"parent_id,omitempty"`
+	ChainID   uuid.UUID  `gorm:"column:chain_id;type:char(36);primaryKey" json:"chain_id"`
+	ParentID  *uuid.UUID `gorm:"column:parent_id;type:char(36)" json:"parent_id,omitempty"`
 	Payload   string     `gorm:"column:payload;type:text;not null" json:"payload"`
 	CreatedAt time.Time  `gorm:"column:created_at;not null" json:"created_at"`
 
