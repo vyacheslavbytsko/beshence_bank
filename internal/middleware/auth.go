@@ -16,15 +16,15 @@ const (
 	ContextAuthRefreshTokenIDKey = "auth.refresh_token_id"
 )
 
-func GetCurrentAccount(c *gin.Context) (string, bool) {
+func GetCurrentAccount(c *gin.Context) (uuid.UUID, bool) {
 	accountIDValue, accountIDExists := c.Get(ContextAuthAccountIDKey)
 	if !accountIDExists {
-		return "", false
+		return uuid.Nil, false
 	}
 
-	accountID, accountIDOk := accountIDValue.(string)
-	if !accountIDOk || accountID == "" {
-		return "", false
+	accountID, accountIDOk := accountIDValue.(uuid.UUID)
+	if !accountIDOk || accountID == uuid.Nil {
+		return uuid.Nil, false
 	}
 
 	return accountID, true
@@ -108,6 +108,39 @@ func CheckAuth(jwtManager *auth.JWT, expectedTokenType auth.TokenType) gin.Handl
 			return
 		}
 
+		sessionID, err := uuid.Parse(authClaims.SessionID)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+
+				"errcode": -1,
+				"error":   "invalid token claims",
+			})
+			return
+		}
+
+		accountID, err := uuid.Parse(authClaims.AccountID)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+
+				"errcode": -1,
+				"error":   "invalid token claims",
+			})
+			return
+		}
+
+		refreshTokenID := uuid.Nil
+		if authClaims.RefreshTokenID != "" {
+			refreshTokenID, err = uuid.Parse(authClaims.RefreshTokenID)
+			if err != nil {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+
+					"errcode": -1,
+					"error":   "invalid token claims",
+				})
+				return
+			}
+		}
+
 		if authClaims.TokenType != expectedTokenType {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 
@@ -118,9 +151,9 @@ func CheckAuth(jwtManager *auth.JWT, expectedTokenType auth.TokenType) gin.Handl
 		}
 
 		c.Set(ContextAuthClaimsKey, claims)
-		c.Set(ContextAuthSessionIDKey, authClaims.SessionID)
-		c.Set(ContextAuthAccountIDKey, authClaims.AccountID)
-		c.Set(ContextAuthRefreshTokenIDKey, authClaims.RefreshTokenID)
+		c.Set(ContextAuthSessionIDKey, sessionID)
+		c.Set(ContextAuthAccountIDKey, accountID)
+		c.Set(ContextAuthRefreshTokenIDKey, refreshTokenID)
 		c.Next()
 	}
 }

@@ -48,5 +48,7 @@ func (c *Chain) Validate() error {
 		return ErrChainVaultRequired
 	}
 
+	// TODO: check if vault already has chain with this name. i know we have it in api but still
+
 	return nil
 }

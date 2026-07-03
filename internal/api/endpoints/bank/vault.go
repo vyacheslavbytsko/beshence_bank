@@ -8,7 +8,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -34,14 +33,8 @@ func VaultsV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 			return
 		}
 
-		accountUUID, err := uuid.Parse(accountID)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"errcode": -1, "error": "unauthorized"})
-			return
-		}
-
 		vaults := make([]models.Vault, 0)
-		if err := deps.DB.Where("account_id = ?", accountUUID).Order("created_at desc").Find(&vaults).Error; err != nil {
+		if err := deps.DB.Where("account_id = ?", accountID).Order("created_at desc").Find(&vaults).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"errcode": -1, "error": "failed to load vaults"})
 			return
 		}
@@ -74,15 +67,6 @@ func CreateVaultV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 			return
 		}
 
-		accountUUID, err := uuid.Parse(accountID)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"errcode": -1,
-				"error":   "unauthorized",
-			})
-			return
-		}
-
 		var request vaultRequest
 		if err := c.ShouldBindJSON(&request); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
@@ -92,7 +76,7 @@ func CreateVaultV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 			return
 		}
 
-		vault := models.Vault{Name: request.Name, AccountID: accountUUID}
+		vault := models.Vault{Name: request.Name, AccountID: accountID}
 		if err := deps.DB.Create(&vault).Error; err != nil {
 			if errors.Is(err, gorm.ErrDuplicatedKey) {
 				c.JSON(http.StatusConflict, gin.H{
