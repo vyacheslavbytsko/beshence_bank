@@ -8,10 +8,10 @@ import (
 )
 
 type Account struct {
-	ID           uuid.UUID `gorm:"type:char(36);primaryKey" json:"id"`
-	Username     string    `gorm:"size:64;not null;uniqueIndex" json:"username"`
+	ID           uuid.UUID `gorm:"column:id;type:char(36);primaryKey" json:"id"`
+	Username     string    `gorm:"column:username;size:64;not null" json:"username"`
 	PasswordHash string    `gorm:"column:password_hash;not null" json:"-"`
-	CreatedAt    time.Time `json:"created_at"`
+	CreatedAt    time.Time `gorm:"column:created_at;not null" json:"created_at"`
 }
 
 func (a *Account) TableName() string {
