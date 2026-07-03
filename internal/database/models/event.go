@@ -14,7 +14,7 @@ type Event struct {
 	Payload   string     `gorm:"column:payload;type:text;not null" json:"payload"`
 	CreatedAt time.Time  `gorm:"column:created_at;not null" json:"created_at"`
 
-	Chain  Chain  `gorm:"foreignKey:ChainID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"-"`
+	Chain  *Chain `gorm:"foreignKey:ChainID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"-"`
 	Parent *Event `gorm:"foreignKey:ParentID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL" json:"-"`
 }
 
