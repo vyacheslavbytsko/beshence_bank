@@ -23,12 +23,12 @@ type Chain struct {
 	LastEventID *uuid.UUID `gorm:"column:last_event_id;type:char(36)" json:"last_event_id,omitempty"`
 	CreatedAt   time.Time  `gorm:"column:created_at;not null" json:"created_at"`
 
-	LastEvent *Event `gorm:"foreignKey:LastEventID;references:EventID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL" json:"-"`
+	LastEvent *Event `gorm:"foreignKey:LastEventID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL" json:"-"`
 	Vault     Vault  `gorm:"foreignKey:VaultID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"-"`
 }
 
 func (c *Chain) TableName() string {
-	return "vaults"
+	return "chains"
 }
 
 func (c *Chain) BeforeCreate(_ *gorm.DB) error {
