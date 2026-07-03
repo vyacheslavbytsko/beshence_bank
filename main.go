@@ -44,8 +44,8 @@ func main() {
 
 	dependencies := api.NewDependencies(
 		db,
-		accessJWT,
 		refreshJWT,
+		accessJWT,
 	)
 
 	versionedEndpoints := versioning.GetVersionedEndpoints(dependencies)

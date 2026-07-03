@@ -83,7 +83,7 @@ func RefreshV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 			return
 		}
 
-		tokens, err := auth.IssueTokenPairForExistingSession(deps.DB, deps.AccessJWTManager, deps.RefreshJWTManager, account, session, tokenRefreshTokenID)
+		tokens, err := auth.IssueTokenPairForExistingSession(deps.DB, deps.RefreshJWTManager, deps.AccessJWTManager, account, session, tokenRefreshTokenID)
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				c.JSON(http.StatusUnauthorized, gin.H{
