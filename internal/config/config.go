@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 )
 
@@ -21,6 +22,7 @@ var (
 )
 
 type Config struct {
+	BankID               uuid.UUID
 	DatabaseURL          string
 	JWTSecret            string
 	AccessJWTTTLSeconds  time.Duration
@@ -30,9 +32,19 @@ type Config struct {
 func Load() (Config, error) {
 	_ = godotenv.Load()
 
-	databaseURL, err := resolveDatabaseURL()
+	databaseUrl, err := resolveDatabaseURL()
 	if err != nil {
 		return Config{}, err
+	}
+
+	bankIdStr := os.Getenv("BANK_ID")
+	if bankIdStr == "" || bankIdStr == "00000000-0000-4000-0000-000000000000" {
+		return Config{}, errors.New("BANK_ID is required")
+	}
+
+	bankId, err := uuid.Parse(bankIdStr)
+	if err != nil {
+		return Config{}, errors.New("BANK_ID is invalid")
 	}
 
 	jwtSecret := os.Getenv("JWT_SECRET")
@@ -64,7 +76,8 @@ func Load() (Config, error) {
 	}
 
 	return Config{
-		DatabaseURL:          databaseURL,
+		BankID:               bankId,
+		DatabaseURL:          databaseUrl,
 		JWTSecret:            jwtSecret,
 		AccessJWTTTLSeconds:  time.Duration(accessJWTTTLSeconds) * time.Second,
 		RefreshJWTTTLSeconds: time.Duration(refreshJWTTTLSeconds) * time.Second,
