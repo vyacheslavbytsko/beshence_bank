@@ -28,15 +28,17 @@ func GetVersionedEndpoints(deps *api.Dependencies) VersionedEndpoints {
 	return VersionedEndpoints{
 		VersionV1dot0: {
 			http.MethodGet: {
-				"/ping":         misc.PingV1dot0,
-				"/auth/me":      middleware.RequireAuth(deps.AccessJWTManager, auth.TokenTypeAccess, authend.MeV1dot0(deps)),
-				"/auth/refresh": middleware.RequireAuth(deps.RefreshJWTManager, auth.TokenTypeRefresh, authend.RefreshV1dot0(deps)),
-				"/vault":        middleware.RequireAuth(deps.AccessJWTManager, auth.TokenTypeAccess, bank.VaultsV1dot0(deps)),
+				"/ping":                 misc.PingV1dot0,
+				"/auth/me":              middleware.RequireAuth(deps.AccessJWTManager, auth.TokenTypeAccess, authend.MeV1dot0(deps)),
+				"/auth/refresh":         middleware.RequireAuth(deps.RefreshJWTManager, auth.TokenTypeRefresh, authend.RefreshV1dot0(deps)),
+				"/vault":                middleware.RequireAuth(deps.AccessJWTManager, auth.TokenTypeAccess, bank.VaultsV1dot0(deps)),
+				"/vault/:vaultId/chain": middleware.RequireAuth(deps.AccessJWTManager, auth.TokenTypeAccess, bank.ChainsV1dot0(deps)),
 			},
 			http.MethodPost: {
-				"/auth/register": authend.RegisterV1dot0(deps),
-				"/auth/login":    authend.LoginV1dot0(deps),
-				"/vault":         middleware.RequireAuth(deps.AccessJWTManager, auth.TokenTypeAccess, bank.CreateVaultV1dot0(deps)),
+				"/auth/register":        authend.RegisterV1dot0(deps),
+				"/auth/login":           authend.LoginV1dot0(deps),
+				"/vault":                middleware.RequireAuth(deps.AccessJWTManager, auth.TokenTypeAccess, bank.CreateVaultV1dot0(deps)),
+				"/vault/:vaultId/chain": middleware.RequireAuth(deps.AccessJWTManager, auth.TokenTypeAccess, bank.CreateChainV1dot0(deps)),
 			},
 		},
 	}

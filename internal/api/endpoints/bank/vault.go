@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -99,4 +100,13 @@ func CreateVaultV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 			"name":    vault.Name,
 		})
 	}
+}
+
+func loadVaultForAccount(db *gorm.DB, vaultID uuid.UUID, accountID uuid.UUID) (models.Vault, error) {
+	var vault models.Vault
+	if err := db.Where("id = ? AND account_id = ?", vaultID, accountID).Take(&vault).Error; err != nil {
+		return models.Vault{}, err
+	}
+
+	return vault, nil
 }
