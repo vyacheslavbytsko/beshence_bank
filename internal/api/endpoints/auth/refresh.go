@@ -67,7 +67,7 @@ func RefreshV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 
 		// TODO: use middleware
 		var account models.Account
-		if err := deps.DB.Select("id", "login").Where("id = ?", accountID.String()).First(&account).Error; err != nil {
+		if err := deps.DB.Select("id", "username").Where("id = ?", accountID.String()).First(&account).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				c.JSON(http.StatusUnauthorized, gin.H{
 					"errcode": -1,
