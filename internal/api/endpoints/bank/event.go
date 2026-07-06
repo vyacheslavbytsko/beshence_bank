@@ -6,7 +6,9 @@ import (
 	"bank/internal/middleware"
 	"bank/internal/misc"
 	"errors"
+	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -21,16 +23,143 @@ type addEventRequest struct {
 	Payload  string  `json:"payload" binding:"required"`
 }
 
-func AddEventV1dot0(deps *api.Dependencies) gin.HandlerFunc {
+type eventsRequest struct {
+	ParentID string `json:"parent_id" form:"parent_id"`
+}
+
+type eventsResponse struct {
+	Events []models.Event `json:"events"`
+}
+
+func EventsV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if deps == nil || deps.DB == nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"errcode": -1, "error": "database is not configured"})
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"errcode": -1,
+				"error":   "database is not configured",
+			})
 			return
 		}
 
 		accountID, ok := middleware.GetCurrentAccount(c)
 		if !ok {
-			c.JSON(http.StatusUnauthorized, gin.H{"errcode": -1, "error": "unauthorized"})
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"errcode": -1,
+				"error":   "unauthorized",
+			})
+			return
+		}
+
+		vaultID, err := uuid.Parse(c.Param("vaultId"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"errcode": -1,
+				"error":   "invalid vault id",
+			})
+			return
+		}
+
+		chainName := c.Param("chainName")
+
+		// TODO: check for name
+
+		if _, err := loadVaultForAccount(deps.DB, vaultID, accountID); err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				c.JSON(http.StatusNotFound, gin.H{
+					"errcode": -1,
+					"error":   "vault not found",
+				})
+				return
+			}
+
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"errcode": -1,
+				"error":   "failed to load vault",
+			})
+			return
+		}
+
+		var chain models.Chain
+		if err := deps.DB.Where("name = ? AND vault_id = ?", chainName, vaultID).Take(&chain).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				c.JSON(http.StatusNotFound, gin.H{
+					"errcode": -1,
+					"error":   "chain not found",
+				})
+				return
+			}
+
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"errcode": -1,
+				"error":   "failed to load chain",
+			})
+			return
+		}
+
+		var request eventsRequest
+		_ = c.ShouldBindQuery(&request)
+
+		parentID, err := parseFetchCursor(request)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"errcode": -1,
+				"error":   err.Error(),
+			})
+			return
+		}
+
+		limit := 100
+		if requestLimit := c.Query("limit"); requestLimit != "" {
+			parsedLimit, parseErr := strconv.Atoi(requestLimit)
+			if parseErr != nil || parsedLimit <= 0 {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"errcode": -1,
+					"error":   "invalid limit",
+				})
+				return
+			}
+			if parsedLimit < limit {
+				limit = parsedLimit
+			}
+		}
+
+		events, err := fetchEventsAfterCursor(deps.DB, vaultID, chainName, parentID, limit)
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				c.JSON(http.StatusNotFound, gin.H{
+					"errcode": -1,
+					"error":   "parent event not found",
+				})
+				return
+			}
+
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"errcode": -1,
+				"error":   "failed to load events",
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, eventsResponse{Events: events})
+	}
+}
+
+func AddEventV1dot0(deps *api.Dependencies) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if deps == nil || deps.DB == nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"errcode": -1,
+				"error":   "database is not configured",
+			})
+			return
+		}
+
+		accountID, ok := middleware.GetCurrentAccount(c)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"errcode": -1,
+				"error":   "unauthorized",
+			})
 			return
 		}
 
@@ -248,4 +377,107 @@ func AddEventV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 			"error":   "event created successfully",
 		})
 	}
+}
+
+func parseFetchCursor(request eventsRequest) (*uuid.UUID, error) {
+	rawCursor := request.ParentID
+
+	if rawCursor == "" {
+		return nil, nil
+	}
+
+	parsed, err := uuid.Parse(rawCursor)
+	if err != nil {
+		return nil, fmt.Errorf("invalid cursor")
+	}
+
+	return &parsed, nil
+}
+
+func fetchEventsAfterCursor(db *gorm.DB, vaultID uuid.UUID, chainName string, parentID *uuid.UUID, limit int) ([]models.Event, error) {
+	if limit <= 0 {
+		return []models.Event{}, nil
+	}
+
+	if parentID != nil {
+		var base models.Event
+		if err := db.Where("vault_id = ? AND chain_name = ? AND id = ?", vaultID, chainName, *parentID).Take(&base).Error; err != nil {
+			return nil, err
+		}
+	}
+
+	tableName, err := eventTableName(db)
+	if err != nil {
+		return nil, err
+	}
+
+	events := make([]models.Event, 0, limit)
+
+	if parentID == nil {
+		query := fmt.Sprintf(`
+WITH RECURSIVE event_chain AS (
+    SELECT e.*
+    FROM %s AS e
+    WHERE e.vault_id = ? AND e.chain_name = ? AND e.parent_id IS NULL
+    LIMIT 1
+
+    UNION ALL
+
+    SELECT child.*
+    FROM event_chain AS ec
+    JOIN LATERAL (
+        SELECT e.*
+        FROM %s AS e
+        WHERE e.vault_id = ? AND e.chain_name = ? AND e.parent_id = ec.id
+        LIMIT 1
+    ) AS child ON true
+)
+SELECT *
+FROM event_chain
+LIMIT ?`, tableName, tableName)
+
+		if err := db.Raw(query, vaultID, chainName, vaultID, chainName, limit).Scan(&events).Error; err != nil {
+			return nil, err
+		}
+
+		return events, nil
+	}
+
+	query := fmt.Sprintf(`
+WITH RECURSIVE event_chain AS (
+    SELECT e.*
+    FROM %s AS e
+    WHERE e.vault_id = ? AND e.chain_name = ? AND e.id = ?
+    LIMIT 1
+
+    UNION ALL
+
+    SELECT child.*
+    FROM event_chain AS ec
+    JOIN LATERAL (
+        SELECT e.*
+        FROM %s AS e
+        WHERE e.vault_id = ? AND e.chain_name = ? AND e.parent_id = ec.id
+        LIMIT 1
+    ) AS child ON true
+)
+SELECT *
+FROM event_chain
+WHERE id <> ?
+LIMIT ?`, tableName, tableName)
+
+	if err := db.Raw(query, vaultID, chainName, *parentID, vaultID, chainName, *parentID, limit).Scan(&events).Error; err != nil {
+		return nil, err
+	}
+
+	return events, nil
+}
+
+func eventTableName(db *gorm.DB) (string, error) {
+	stmt := &gorm.Statement{DB: db}
+	if err := stmt.Parse(&models.Event{}); err != nil {
+		return "", err
+	}
+
+	return stmt.Schema.Table, nil
 }
