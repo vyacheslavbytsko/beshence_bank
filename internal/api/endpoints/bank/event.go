@@ -31,6 +31,8 @@ type eventsResponse struct {
 	Events []models.Event `json:"events"`
 }
 
+// TODO: redo all ooops
+
 func EventsV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if deps == nil || deps.DB == nil {
