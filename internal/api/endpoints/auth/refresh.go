@@ -16,8 +16,8 @@ func RefreshV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if deps == nil || deps.DB == nil || deps.AccessJWTManager == nil || deps.RefreshJWTManager == nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"errcode": -1,
-				"error":   "auth is not configured",
+				"err":    "UNKNOWN",
+				"errmsg": "auth is not configured",
 			})
 			return
 		}
@@ -25,8 +25,8 @@ func RefreshV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		accountID, ok := middleware.GetCurrentAccount(c)
 		if !ok {
 			c.JSON(http.StatusUnauthorized, gin.H{
-				"errcode": 401,
-				"error":   "unauthorized",
+				"err":    "UNAUTHORIZED",
+				"errmsg": "unauthorized",
 			})
 			return
 		}
@@ -34,8 +34,8 @@ func RefreshV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		sessionID, tokenRefreshTokenID, ok := middleware.GetCurrentSession(c)
 		if !ok {
 			c.JSON(http.StatusUnauthorized, gin.H{
-				"errcode": 401,
-				"error":   "unauthorized",
+				"err":    "UNAUTHORIZED",
+				"errmsg": "unauthorized",
 			})
 			return
 		}
@@ -44,23 +44,23 @@ func RefreshV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		if err := deps.DB.Where("id = ? AND account_id = ?", sessionID, accountID).First(&session).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				c.JSON(http.StatusUnauthorized, gin.H{
-					"errcode": 401,
-					"error":   "invalid session",
+					"err":    "UNAUTHORIZED",
+					"errmsg": "invalid session",
 				})
 				return
 			}
 
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"errcode": -1,
-				"error":   "failed to load session",
+				"err":    "UNKNOWN",
+				"errmsg": "failed to load session",
 			})
 			return
 		}
 
 		if session.RefreshTokenID != tokenRefreshTokenID {
 			c.JSON(http.StatusUnauthorized, gin.H{
-				"errcode": 401,
-				"error":   "refresh token is no longer valid",
+				"err":    "UNAUTHORIZED",
+				"errmsg": "refresh token is no longer valid",
 			})
 			return
 		}
@@ -70,15 +70,15 @@ func RefreshV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		if err := deps.DB.Select("id", "username").Where("id = ?", accountID.String()).First(&account).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				c.JSON(http.StatusUnauthorized, gin.H{
-					"errcode": 401,
-					"error":   "unauthorized",
+					"err":    "UNAUTHORIZED",
+					"errmsg": "unauthorized",
 				})
 				return
 			}
 
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"errcode": -1,
-				"error":   "failed to load account",
+				"err":    "UNKNOWN",
+				"errmsg": "failed to load account",
 			})
 			return
 		}
@@ -87,21 +87,21 @@ func RefreshV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				c.JSON(http.StatusUnauthorized, gin.H{
-					"errcode": 401,
-					"error":   "refresh token is no longer valid",
+					"err":    "UNAUTHORIZED",
+					"errmsg": "refresh token is no longer valid",
 				})
 				return
 			}
 
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"errcode": -1,
-				"error":   "failed to generate tokens",
+				"err":    "UNKNOWN",
+				"errmsg": "failed to generate tokens",
 			})
 			return
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			"errcode":       0,
+			"err":           "0",
 			"id":            account.ID,
 			"username":      account.Username,
 			"refresh_token": tokens.RefreshToken,

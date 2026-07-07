@@ -21,8 +21,8 @@ func LoginV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if deps == nil || deps.DB == nil || deps.AccessJWTManager == nil || deps.RefreshJWTManager == nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"errcode": -1,
-				"error":   "auth is not configured",
+				"err":    "UNKNOWN",
+				"errmsg": "auth is not configured",
 			})
 			return
 		}
@@ -30,8 +30,8 @@ func LoginV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		var request loginRequest
 		if err := c.ShouldBindJSON(&request); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"errcode": -1,
-				"error":   "invalid request body",
+				"err":    "UNKNOWN",
+				"errmsg": "invalid request body",
 			})
 			return
 		}
@@ -40,15 +40,15 @@ func LoginV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		if err := deps.DB.Where("username = ?", request.Username).First(&account).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				c.JSON(http.StatusUnauthorized, gin.H{
-					"errcode": -1,
-					"error":   "invalid credentials",
+					"err":    "UNKNOWN",
+					"errmsg": "invalid credentials",
 				})
 				return
 			}
 
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"errcode": -1,
-				"error":   "failed to load account",
+				"err":    "UNKNOWN",
+				"errmsg": "failed to load account",
 			})
 			return
 		}
@@ -56,16 +56,16 @@ func LoginV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		ok, err := auth.VerifyPassword(request.Password, account.PasswordHash)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"errcode": -1,
-				"error":   "failed to verify password",
+				"err":    "UNKNOWN",
+				"errmsg": "failed to verify password",
 			})
 			return
 		}
 
 		if !ok {
 			c.JSON(http.StatusUnauthorized, gin.H{
-				"errcode": -1,
-				"error":   "invalid credentials",
+				"err":    "UNKNOWN",
+				"errmsg": "invalid credentials",
 			})
 			return
 		}
@@ -73,14 +73,14 @@ func LoginV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		tokens, err := auth.IssueTokenPairForNewSession(deps.DB, deps.RefreshJWTManager, deps.AccessJWTManager, account, c.GetHeader("User-Agent"))
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"errcode": -1,
-				"error":   "failed to generate tokens",
+				"err":    "UNKNOWN",
+				"errmsg": "failed to generate tokens",
 			})
 			return
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			"errcode":       0,
+			"err":           "0",
 			"id":            account.ID,
 			"username":      account.Username,
 			"refresh_token": tokens.RefreshToken,

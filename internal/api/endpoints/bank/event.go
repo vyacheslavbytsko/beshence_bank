@@ -37,8 +37,8 @@ func EventsV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if deps == nil || deps.DB == nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"errcode": -1,
-				"error":   "database is not configured",
+				"err":    "UNKNOWN",
+				"errmsg": "database is not configured",
 			})
 			return
 		}
@@ -46,8 +46,8 @@ func EventsV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		accountID, ok := middleware.GetCurrentAccount(c)
 		if !ok {
 			c.JSON(http.StatusUnauthorized, gin.H{
-				"errcode": 401,
-				"error":   "unauthorized",
+				"err":    "UNAUTHORIZED",
+				"errmsg": "unauthorized",
 			})
 			return
 		}
@@ -55,8 +55,8 @@ func EventsV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		vaultID, err := uuid.Parse(c.Param("vaultId"))
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"errcode": -1,
-				"error":   "invalid vault id",
+				"err":    "UNKNOWN",
+				"errmsg": "invalid vault id",
 			})
 			return
 		}
@@ -68,15 +68,15 @@ func EventsV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		if _, err := loadVaultForAccount(deps.DB, vaultID, accountID); err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				c.JSON(http.StatusNotFound, gin.H{
-					"errcode": -1,
-					"error":   "vault not found",
+					"err":    "UNKNOWN",
+					"errmsg": "vault not found",
 				})
 				return
 			}
 
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"errcode": -1,
-				"error":   "failed to load vault",
+				"err":    "UNKNOWN",
+				"errmsg": "failed to load vault",
 			})
 			return
 		}
@@ -85,15 +85,15 @@ func EventsV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		if err := deps.DB.Where("name = ? AND vault_id = ?", chainName, vaultID).Take(&chain).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				c.JSON(http.StatusNotFound, gin.H{
-					"errcode": -1,
-					"error":   "chain not found",
+					"err":    "UNKNOWN",
+					"errmsg": "chain not found",
 				})
 				return
 			}
 
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"errcode": -1,
-				"error":   "failed to load chain",
+				"err":    "UNKNOWN",
+				"errmsg": "failed to load chain",
 			})
 			return
 		}
@@ -104,8 +104,8 @@ func EventsV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		parentID, err := parseFetchCursor(request)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"errcode": -1,
-				"error":   err.Error(),
+				"err":    "UNKNOWN",
+				"errmsg": err.Error(),
 			})
 			return
 		}
@@ -115,8 +115,8 @@ func EventsV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 			parsedLimit, parseErr := strconv.Atoi(requestLimit)
 			if parseErr != nil || parsedLimit <= 0 {
 				c.JSON(http.StatusBadRequest, gin.H{
-					"errcode": -1,
-					"error":   "invalid limit",
+					"err":    "UNKNOWN",
+					"errmsg": "invalid limit",
 				})
 				return
 			}
@@ -129,15 +129,15 @@ func EventsV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				c.JSON(http.StatusNotFound, gin.H{
-					"errcode": -1,
-					"error":   "parent event not found",
+					"err":    "UNKNOWN",
+					"errmsg": "parent event not found",
 				})
 				return
 			}
 
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"errcode": -1,
-				"error":   "failed to load events",
+				"err":    "UNKNOWN",
+				"errmsg": "failed to load events",
 			})
 			return
 		}
@@ -150,8 +150,8 @@ func AddEventV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if deps == nil || deps.DB == nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"errcode": -1,
-				"error":   "database is not configured",
+				"err":    "UNKNOWN",
+				"errmsg": "database is not configured",
 			})
 			return
 		}
@@ -159,8 +159,8 @@ func AddEventV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		accountID, ok := middleware.GetCurrentAccount(c)
 		if !ok {
 			c.JSON(http.StatusUnauthorized, gin.H{
-				"errcode": 401,
-				"error":   "unauthorized",
+				"err":    "UNAUTHORIZED",
+				"errmsg": "unauthorized",
 			})
 			return
 		}
@@ -168,8 +168,8 @@ func AddEventV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		vaultID, err := uuid.Parse(c.Param("vaultId"))
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"errcode": -1,
-				"error":   "invalid vault id",
+				"err":    "UNKNOWN",
+				"errmsg": "invalid vault id",
 			})
 			return
 		}
@@ -181,15 +181,15 @@ func AddEventV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		if _, err := loadVaultForAccount(deps.DB, vaultID, accountID); err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				c.JSON(http.StatusNotFound, gin.H{
-					"errcode": -1,
-					"error":   "vault not found",
+					"err":    "UNKNOWN",
+					"errmsg": "vault not found",
 				})
 				return
 			}
 
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"errcode": -1,
-				"error":   "failed to load vault",
+				"err":    "UNKNOWN",
+				"errmsg": "failed to load vault",
 			})
 			return
 		}
@@ -197,8 +197,8 @@ func AddEventV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		var request addEventRequest
 		if err := c.ShouldBindJSON(&request); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"errcode": -1,
-				"error":   "invalid request body",
+				"err":    "UNKNOWN",
+				"errmsg": "invalid request body",
 			})
 			return
 		}
@@ -206,8 +206,8 @@ func AddEventV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		eventID, err := uuid.Parse(request.EventID)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"errcode": -1,
-				"error":   "invalid event id",
+				"err":    "UNKNOWN",
+				"errmsg": "invalid event id",
 			})
 			return
 		}
@@ -215,8 +215,8 @@ func AddEventV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		parentID, err := misc.ParseOptionalUUID(request.ParentID)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"errcode": -1,
-				"error":   "invalid parent_id",
+				"err":    "UNKNOWN",
+				"errmsg": "invalid parent_id",
 			})
 			return
 		}
@@ -224,8 +224,8 @@ func AddEventV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		tx := deps.DB.Begin()
 		if tx.Error != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"errcode": -1,
-				"error":   "failed to start transaction",
+				"err":    "UNKNOWN",
+				"errmsg": "failed to start transaction",
 			})
 			return
 		}
@@ -238,15 +238,15 @@ func AddEventV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 			rollback()
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				c.JSON(http.StatusNotFound, gin.H{
-					"errcode": -1,
-					"error":   "vault not found",
+					"err":    "UNKNOWN",
+					"errmsg": "vault not found",
 				})
 				return
 			}
 
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"errcode": -1,
-				"error":   "failed to load vault",
+				"err":    "UNKNOWN",
+				"errmsg": "failed to load vault",
 			})
 			return
 		}
@@ -257,15 +257,15 @@ func AddEventV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 			rollback()
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				c.JSON(http.StatusNotFound, gin.H{
-					"errcode": -1,
-					"error":   "chain not found",
+					"err":    "UNKNOWN",
+					"errmsg": "chain not found",
 				})
 				return
 			}
 
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"errcode": -1,
-				"error":   "failed to load chain",
+				"err":    "UNKNOWN",
+				"errmsg": "failed to load chain",
 			})
 			return
 		}
@@ -273,8 +273,8 @@ func AddEventV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		if !misc.SameOptionalUUID(parentID, chain.LastEventID) {
 			rollback()
 			c.JSON(http.StatusConflict, gin.H{
-				"errcode":       -1,
-				"error":         "last event id is not same",
+				"err":           "UNKNOWN",
+				"errmsg":        "last event id is not same",
 				"last_event_id": misc.OptionalUUIDToString(chain.LastEventID),
 			})
 			return
@@ -298,8 +298,8 @@ func AddEventV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 			if errors.Is(result.Error, gorm.ErrDuplicatedKey) {
 				rollback()
 				c.JSON(http.StatusConflict, gin.H{
-					"errcode":       -1,
-					"error":         "last event id is not same",
+					"err":           "UNKNOWN",
+					"errmsg":        "last event id is not same",
 					"last_event_id": misc.OptionalUUIDToString(chain.LastEventID),
 				})
 				return
@@ -307,8 +307,8 @@ func AddEventV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 
 			rollback()
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"errcode": -1,
-				"error":   "failed to insert event",
+				"err":    "UNKNOWN",
+				"errmsg": "failed to insert event",
 			})
 			return
 		}
@@ -319,16 +319,16 @@ func AddEventV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 				rollback()
 				if errors.Is(err, gorm.ErrRecordNotFound) {
 					c.JSON(http.StatusConflict, gin.H{
-						"errcode":       -1,
-						"error":         "last event id is not same",
+						"err":           "UNKNOWN",
+						"errmsg":        "last event id is not same",
 						"last_event_id": misc.OptionalUUIDToString(chain.LastEventID),
 					})
 					return
 				}
 
 				c.JSON(http.StatusInternalServerError, gin.H{
-					"errcode": -1,
-					"error":   "failed to check existing event",
+					"err":    "UNKNOWN",
+					"errmsg": "failed to check existing event",
 				})
 				return
 			}
@@ -336,8 +336,8 @@ func AddEventV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 			if !misc.SameOptionalUUID(existing.ParentID, parentID) || existing.Payload != request.Payload {
 				rollback()
 				c.JSON(http.StatusConflict, gin.H{
-					"errcode":       -1,
-					"error":         "last event id is not same",
+					"err":           "UNKNOWN",
+					"errmsg":        "last event id is not same",
 					"last_event_id": misc.OptionalUUIDToString(chain.LastEventID),
 				})
 				return
@@ -345,14 +345,14 @@ func AddEventV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 
 			if err := tx.Commit().Error; err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{
-					"errcode": -1,
-					"error":   "failed to complete transaction",
+					"err":    "UNKNOWN",
+					"errmsg": "failed to complete transaction",
 				})
 				return
 			}
 
 			c.JSON(http.StatusOK, gin.H{
-				"errcode": 0,
+				"err": "0",
 			})
 			return
 		}
@@ -360,23 +360,23 @@ func AddEventV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		if err := tx.Model(&models.Chain{}).Where("name = ? AND vault_id = ?", chainName, vaultID).Update("last_event_id", eventID).Error; err != nil {
 			rollback()
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"errcode": -1,
-				"error":   "failed to update chain state",
+				"err":    "UNKNOWN",
+				"errmsg": "failed to update chain state",
 			})
 			return
 		}
 
 		if err := tx.Commit().Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"errcode": -1,
-				"error":   "failed to complete transaction",
+				"err":    "UNKNOWN",
+				"errmsg": "failed to complete transaction",
 			})
 			return
 		}
 
 		c.JSON(http.StatusCreated, gin.H{
-			"errcode": 0,
-			"error":   "event created successfully",
+			"err":    "0",
+			"errmsg": "event created successfully",
 		})
 	}
 }

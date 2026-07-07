@@ -24,22 +24,22 @@ type vaultResponse struct {
 func VaultsV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if deps == nil || deps.DB == nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"errcode": -1, "error": "database is not configured"})
+			c.JSON(http.StatusInternalServerError, gin.H{"err": "UNKNOWN", "errmsg": "database is not configured"})
 			return
 		}
 
 		accountID, ok := middleware.GetCurrentAccount(c)
 		if !ok {
 			c.JSON(http.StatusUnauthorized, gin.H{
-				"errcode": 401,
-				"error":   "unauthorized",
+				"err":    "UNAUTHORIZED",
+				"errmsg": "unauthorized",
 			})
 			return
 		}
 
 		vaults := make([]models.Vault, 0)
 		if err := deps.DB.Where("account_id = ?", accountID).Order("created_at desc").Find(&vaults).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"errcode": -1, "error": "failed to load vaults"})
+			c.JSON(http.StatusInternalServerError, gin.H{"err": "UNKNOWN", "errmsg": "failed to load vaults"})
 			return
 		}
 
@@ -48,7 +48,7 @@ func VaultsV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 			items[i] = vaultResponse{ID: item.ID.String(), Name: item.Name}
 		}
 
-		c.JSON(http.StatusOK, gin.H{"errcode": 0, "vaults": items})
+		c.JSON(http.StatusOK, gin.H{"err": "0", "vaults": items})
 	}
 }
 
@@ -56,8 +56,8 @@ func CreateVaultV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if deps == nil || deps.DB == nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"errcode": -1,
-				"error":   "database is not configured",
+				"err":    "UNKNOWN",
+				"errmsg": "database is not configured",
 			})
 			return
 		}
@@ -65,8 +65,8 @@ func CreateVaultV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		accountID, ok := middleware.GetCurrentAccount(c)
 		if !ok {
 			c.JSON(http.StatusUnauthorized, gin.H{
-				"errcode": 401,
-				"error":   "unauthorized",
+				"err":    "UNAUTHORIZED",
+				"errmsg": "unauthorized",
 			})
 			return
 		}
@@ -74,8 +74,8 @@ func CreateVaultV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		var request vaultRequest
 		if err := c.ShouldBindJSON(&request); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"errcode": -1,
-				"error":   "invalid request body",
+				"err":    "UNKNOWN",
+				"errmsg": "invalid request body",
 			})
 			return
 		}
@@ -84,23 +84,23 @@ func CreateVaultV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		if err := deps.DB.Create(&vault).Error; err != nil {
 			if errors.Is(err, gorm.ErrDuplicatedKey) {
 				c.JSON(http.StatusConflict, gin.H{
-					"errcode": -1,
-					"error":   "you already have a vault with this name",
+					"err":    "UNKNOWN",
+					"errmsg": "you already have a vault with this name",
 				})
 				return
 			}
 
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"errcode": -1,
-				"error":   "failed to create vault",
+				"err":    "UNKNOWN",
+				"errmsg": "failed to create vault",
 			})
 			return
 		}
 
 		c.JSON(http.StatusCreated, gin.H{
-			"errcode": 0,
-			"id":      vault.ID.String(),
-			"name":    vault.Name,
+			"err":  "0",
+			"id":   vault.ID.String(),
+			"name": vault.Name,
 		})
 	}
 }

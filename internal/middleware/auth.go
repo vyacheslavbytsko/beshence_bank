@@ -62,8 +62,8 @@ func CheckAuth(jwtManager *auth.JWT, expectedTokenType auth.TokenType) gin.Handl
 		if jwtManager == nil {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 
-				"errcode": -1,
-				"error":   "auth is not configured",
+				"err":    "UNKNOWN",
+				"errmsg": "auth is not configured",
 			})
 			return
 		}
@@ -71,8 +71,8 @@ func CheckAuth(jwtManager *auth.JWT, expectedTokenType auth.TokenType) gin.Handl
 		authorizationHeader := c.GetHeader("Authorization")
 		if !strings.HasPrefix(authorizationHeader, "Bearer ") {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"errcode": 401,
-				"error":   "missing or invalid authorization header",
+				"err":    "UNAUTHORIZED",
+				"errmsg": "missing or invalid authorization header",
 			})
 			return
 		}
@@ -80,8 +80,8 @@ func CheckAuth(jwtManager *auth.JWT, expectedTokenType auth.TokenType) gin.Handl
 		token := strings.TrimSpace(strings.TrimPrefix(authorizationHeader, "Bearer "))
 		if token == "" {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"errcode": 401,
-				"error":   "missing bearer token",
+				"err":    "UNAUTHORIZED",
+				"errmsg": "missing bearer token",
 			})
 			return
 		}
@@ -89,8 +89,8 @@ func CheckAuth(jwtManager *auth.JWT, expectedTokenType auth.TokenType) gin.Handl
 		claims, err := jwtManager.ParseToken(token)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"errcode": 401,
-				"error":   "invalid token",
+				"err":    "UNAUTHORIZED",
+				"errmsg": "invalid token",
 			})
 			return
 		}
@@ -98,8 +98,8 @@ func CheckAuth(jwtManager *auth.JWT, expectedTokenType auth.TokenType) gin.Handl
 		authClaims, claimsOk := auth.ClaimsFromToken(claims)
 		if !claimsOk {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"errcode": 401,
-				"error":   "invalid token claims",
+				"err":    "UNAUTHORIZED",
+				"errmsg": "invalid token claims",
 			})
 			return
 		}
@@ -107,8 +107,8 @@ func CheckAuth(jwtManager *auth.JWT, expectedTokenType auth.TokenType) gin.Handl
 		sessionID, err := uuid.Parse(authClaims.SessionID)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"errcode": 401,
-				"error":   "invalid token claims",
+				"err":    "UNAUTHORIZED",
+				"errmsg": "invalid token claims",
 			})
 			return
 		}
@@ -116,8 +116,8 @@ func CheckAuth(jwtManager *auth.JWT, expectedTokenType auth.TokenType) gin.Handl
 		accountID, err := uuid.Parse(authClaims.AccountID)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"errcode": 401,
-				"error":   "invalid token claims",
+				"err":    "UNAUTHORIZED",
+				"errmsg": "invalid token claims",
 			})
 			return
 		}
@@ -127,8 +127,8 @@ func CheckAuth(jwtManager *auth.JWT, expectedTokenType auth.TokenType) gin.Handl
 			refreshTokenID, err = uuid.Parse(authClaims.RefreshTokenID)
 			if err != nil {
 				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-					"errcode": 401,
-					"error":   "invalid token claims",
+					"err":    "UNAUTHORIZED",
+					"errmsg": "invalid token claims",
 				})
 				return
 			}
@@ -136,8 +136,8 @@ func CheckAuth(jwtManager *auth.JWT, expectedTokenType auth.TokenType) gin.Handl
 
 		if authClaims.TokenType != expectedTokenType {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"errcode": 401,
-				"error":   "invalid token type",
+				"err":    "UNAUTHORIZED",
+				"errmsg": "invalid token type",
 			})
 			return
 		}
