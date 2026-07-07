@@ -29,10 +29,12 @@ type eventsRequest struct {
 
 type eventsResponse struct {
 	Events []models.Event `json:"events"`
+	Err    string         `json:"err"`
 }
 
 type lastEventResponse struct {
 	Event *models.Event `json:"event"`
+	Err   string        `json:"err"`
 }
 
 // TODO: redo all ooops
@@ -146,7 +148,7 @@ func EventsV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, eventsResponse{Events: events})
+		c.JSON(http.StatusOK, eventsResponse{Err: "0", Events: events})
 	}
 }
 
@@ -238,7 +240,7 @@ func LastEventV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, lastEventResponse{Event: &event})
+		c.JSON(http.StatusOK, lastEventResponse{Err: "0", Event: &event})
 	}
 }
 
@@ -298,6 +300,8 @@ func AddEventV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 			})
 			return
 		}
+
+		// TODO: add check that payload is Base64 and has "n" (name) and "e" (event) parameters
 
 		eventID, err := uuid.Parse(request.EventID)
 		if err != nil {
