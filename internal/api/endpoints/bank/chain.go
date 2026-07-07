@@ -29,7 +29,10 @@ func ChainsV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 
 		accountID, ok := middleware.GetCurrentAccount(c)
 		if !ok {
-			c.JSON(http.StatusUnauthorized, gin.H{"errcode": -1, "error": "unauthorized"})
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"errcode": 401,
+				"error":   "unauthorized",
+			})
 			return
 		}
 
@@ -89,7 +92,7 @@ func CreateChainV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		accountID, ok := middleware.GetCurrentAccount(c)
 		if !ok {
 			c.JSON(http.StatusUnauthorized, gin.H{
-				"errcode": -1,
+				"errcode": 401,
 				"error":   "unauthorized",
 			})
 			return

@@ -24,7 +24,7 @@ func MeV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		accountID, ok := middleware.GetCurrentAccount(c)
 		if !ok {
 			c.JSON(http.StatusUnauthorized, gin.H{
-				"errcode": -1,
+				"errcode": 401,
 				"error":   "unauthorized",
 			})
 			return
@@ -35,7 +35,7 @@ func MeV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		if err := deps.DB.Select("id", "username").Where("id = ?", accountID.String()).First(&account).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				c.JSON(http.StatusUnauthorized, gin.H{
-					"errcode": -1,
+					"errcode": 401,
 					"error":   "unauthorized",
 				})
 				return
