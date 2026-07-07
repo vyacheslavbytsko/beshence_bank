@@ -40,7 +40,7 @@ func LoginV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		if err := deps.DB.Where("username = ?", request.Username).First(&account).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				c.JSON(http.StatusUnauthorized, gin.H{
-					"errcode": 401,
+					"errcode": -1,
 					"error":   "invalid credentials",
 				})
 				return
@@ -64,7 +64,7 @@ func LoginV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 
 		if !ok {
 			c.JSON(http.StatusUnauthorized, gin.H{
-				"errcode": 401,
+				"errcode": -1,
 				"error":   "invalid credentials",
 			})
 			return
