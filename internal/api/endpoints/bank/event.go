@@ -31,6 +31,10 @@ type eventsResponse struct {
 	Events []models.Event `json:"events"`
 }
 
+type lastEventResponse struct {
+	Event *models.Event `json:"event"`
+}
+
 // TODO: redo all ooops
 
 func EventsV1dot0(deps *api.Dependencies) gin.HandlerFunc {
@@ -143,6 +147,98 @@ func EventsV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, eventsResponse{Events: events})
+	}
+}
+
+func LastEventV1dot0(deps *api.Dependencies) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if deps == nil || deps.DB == nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"err":    "UNKNOWN",
+				"errmsg": "database is not configured",
+			})
+			return
+		}
+
+		accountID, ok := middleware.GetCurrentAccount(c)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"err":    "UNAUTHORIZED",
+				"errmsg": "unauthorized",
+			})
+			return
+		}
+
+		vaultID, err := uuid.Parse(c.Param("vaultId"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"err":    "UNKNOWN",
+				"errmsg": "invalid vault id",
+			})
+			return
+		}
+
+		chainName := c.Param("chainName")
+
+		if _, err := loadVaultForAccount(deps.DB, vaultID, accountID); err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				c.JSON(http.StatusNotFound, gin.H{
+					"err":    "UNKNOWN",
+					"errmsg": "vault not found",
+				})
+				return
+			}
+
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"err":    "UNKNOWN",
+				"errmsg": "failed to load vault",
+			})
+			return
+		}
+
+		var chain models.Chain
+		if err := deps.DB.Where("name = ? AND vault_id = ?", chainName, vaultID).Take(&chain).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				c.JSON(http.StatusNotFound, gin.H{
+					"err":    "UNKNOWN",
+					"errmsg": "chain not found",
+				})
+				return
+			}
+
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"err":    "UNKNOWN",
+				"errmsg": "failed to load chain",
+			})
+			return
+		}
+
+		if chain.LastEventID == nil {
+			c.JSON(http.StatusOK, gin.H{
+				"err":    "NO_LAST_EVENT",
+				"errmsg": "chain doesn't have last event",
+			})
+			return
+		}
+
+		var event models.Event
+		if err := deps.DB.Where("vault_id = ? AND chain_name = ? AND id = ?", vaultID, chainName, *chain.LastEventID).Take(&event).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				c.JSON(http.StatusNotFound, gin.H{
+					"err":    "UNKNOWN",
+					"errmsg": "last event not found",
+				})
+				return
+			}
+
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"err":    "UNKNOWN",
+				"errmsg": "failed to load last event",
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, lastEventResponse{Event: &event})
 	}
 }
 

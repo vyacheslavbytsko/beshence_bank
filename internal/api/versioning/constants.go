@@ -35,6 +35,8 @@ func GetVersionedEndpoints(deps *api.Dependencies) VersionedEndpoints {
 				"/vault/:vaultId/chain": middleware.RequireAuth(deps.AccessJWTManager, auth.TokenTypeAccess, bank.ChainsV1dot0(deps)),
 				"/vault/:vaultId/" +
 					"chain/:chainName/event": middleware.RequireAuth(deps.AccessJWTManager, auth.TokenTypeAccess, bank.EventsV1dot0(deps)),
+				"/vault/:vaultId/" +
+					"chain/:chainName/event/last": middleware.RequireAuth(deps.AccessJWTManager, auth.TokenTypeAccess, bank.LastEventV1dot0(deps)),
 			},
 			http.MethodPost: {
 				"/auth/register":        authend.RegisterV1dot0(deps),
