@@ -19,6 +19,10 @@ type Event struct {
 	Parent *Event `gorm:"foreignKey:ParentID,ChainName,VaultID;references:ID,ChainName,VaultID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL" json:"-"`
 }
 
+func (e *Event) TableName() string {
+	return "events"
+}
+
 func (e *Event) BeforeCreate(_ *gorm.DB) error {
 	if e.ID == uuid.Nil {
 		e.ID = uuid.New()
