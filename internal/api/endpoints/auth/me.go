@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func MeV1dot0(deps *api.Dependencies) gin.HandlerFunc {
+func MeV1(deps *api.Dependencies) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if deps == nil || deps.DB == nil {
 			c.JSON(http.StatusInternalServerError, gin.H{

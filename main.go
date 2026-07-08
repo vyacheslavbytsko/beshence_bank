@@ -40,7 +40,7 @@ func main() {
 	)
 
 	router := gin.Default()
-	router.GET("/.well-known/beshence/bank", misc.PingV1dot0)
+	router.GET("/.well-known/beshence/bank", misc.PingV1)
 
 	dependencies := api.NewDependencies(
 		db,

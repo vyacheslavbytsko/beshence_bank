@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func PingV1dot0(c *gin.Context) {
+func PingV1(c *gin.Context) {
 	cfg, err := config.Load()
 	if err != nil {
 		log.Fatal(err)

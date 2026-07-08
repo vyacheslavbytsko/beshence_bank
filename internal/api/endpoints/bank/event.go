@@ -39,7 +39,7 @@ type lastEventResponse struct {
 
 // TODO: redo all ooops
 
-func EventsV1dot0(deps *api.Dependencies) gin.HandlerFunc {
+func EventsV1(deps *api.Dependencies) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if deps == nil || deps.DB == nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
@@ -152,7 +152,7 @@ func EventsV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 	}
 }
 
-func LastEventV1dot0(deps *api.Dependencies) gin.HandlerFunc {
+func LastEventV1(deps *api.Dependencies) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if deps == nil || deps.DB == nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
@@ -244,7 +244,7 @@ func LastEventV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 	}
 }
 
-func AddEventV1dot0(deps *api.Dependencies) gin.HandlerFunc {
+func AddEventV1(deps *api.Dependencies) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if deps == nil || deps.DB == nil {
 			c.JSON(http.StatusInternalServerError, gin.H{

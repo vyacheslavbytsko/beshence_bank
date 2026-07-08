@@ -17,7 +17,7 @@ type registerRequest struct {
 	Password string `json:"password" binding:"required,min=8,max=128"`
 }
 
-func RegisterV1dot0(deps *api.Dependencies) gin.HandlerFunc {
+func RegisterV1(deps *api.Dependencies) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if deps == nil || deps.DB == nil || deps.AccessJWTManager == nil || deps.RefreshJWTManager == nil {
 			c.JSON(http.StatusInternalServerError, gin.H{

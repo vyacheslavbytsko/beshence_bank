@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func RefreshV1dot0(deps *api.Dependencies) gin.HandlerFunc {
+func RefreshV1(deps *api.Dependencies) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if deps == nil || deps.DB == nil || deps.AccessJWTManager == nil || deps.RefreshJWTManager == nil {
 			c.JSON(http.StatusInternalServerError, gin.H{

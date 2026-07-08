@@ -20,7 +20,7 @@ type chainResponse struct {
 	Name string `json:"name"`
 }
 
-func ChainsV1dot0(deps *api.Dependencies) gin.HandlerFunc {
+func ChainsV1(deps *api.Dependencies) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if deps == nil || deps.DB == nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"err": "UNKNOWN", "errmsg": "database is not configured"})
@@ -79,7 +79,7 @@ func ChainsV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 	}
 }
 
-func CreateChainV1dot0(deps *api.Dependencies) gin.HandlerFunc {
+func CreateChainV1(deps *api.Dependencies) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if deps == nil || deps.DB == nil {
 			c.JSON(http.StatusInternalServerError, gin.H{

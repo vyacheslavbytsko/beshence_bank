@@ -21,7 +21,7 @@ type vaultResponse struct {
 	Name string `json:"name"`
 }
 
-func VaultsV1dot0(deps *api.Dependencies) gin.HandlerFunc {
+func VaultsV1(deps *api.Dependencies) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if deps == nil || deps.DB == nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"err": "UNKNOWN", "errmsg": "database is not configured"})
@@ -52,7 +52,7 @@ func VaultsV1dot0(deps *api.Dependencies) gin.HandlerFunc {
 	}
 }
 
-func CreateVaultV1dot0(deps *api.Dependencies) gin.HandlerFunc {
+func CreateVaultV1(deps *api.Dependencies) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if deps == nil || deps.DB == nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
