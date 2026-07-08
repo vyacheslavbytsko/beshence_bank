@@ -2,6 +2,7 @@ package database
 
 import (
 	"bank/internal/database/models"
+	"fmt"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -23,6 +24,22 @@ func Migrate(db *gorm.DB) error {
 		&models.Event{},
 	); err != nil {
 		return err
+	}
+
+	queries := []string{
+		`CREATE UNIQUE INDEX IF NOT EXISTS idx_events_chain_root_unique
+       ON events (chain_name, vault_id)
+       WHERE parent_id IS NULL`,
+
+		`CREATE UNIQUE INDEX IF NOT EXISTS idx_events_chain_parent_unique
+       ON events (chain_name, vault_id, parent_id)
+       WHERE parent_id IS NOT NULL`,
+	}
+
+	for _, query := range queries {
+		if err := db.Exec(query).Error; err != nil {
+			return fmt.Errorf("create event constraints: %w", err)
+		}
 	}
 
 	return nil

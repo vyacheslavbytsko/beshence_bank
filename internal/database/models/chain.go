@@ -18,9 +18,9 @@ var (
 
 type Chain struct {
 	Name        string     `gorm:"column:name;size:128;primaryKey" json:"name"`
-	VaultID     uuid.UUID  `gorm:"column:vault_id;type:char(36);primaryKey" json:"vault_id"`
+	VaultID     uuid.UUID  `gorm:"column:vault_id;type:char(36);primaryKey;index:idx_chain_vault_created" json:"vault_id"`
 	LastEventID *uuid.UUID `gorm:"column:last_event_id;type:char(36)" json:"last_event_id,omitempty"`
-	CreatedAt   time.Time  `gorm:"column:created_at;not null" json:"created_at"`
+	CreatedAt   time.Time  `gorm:"column:created_at;not null;index:idx_chain_vault_created" json:"created_at"`
 
 	LastEvent *Event `gorm:"foreignKey:LastEventID,Name,VaultID;references:ID,ChainName,VaultID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL" json:"-"`
 	Vault     Vault  `gorm:"foreignKey:VaultID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"-"`
