@@ -135,7 +135,7 @@ func EventsV1(deps *api.Dependencies) gin.HandlerFunc {
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				c.JSON(http.StatusNotFound, gin.H{
-					"err":    "UNKNOWN",
+					"err":    "PARENT_EVENT_NOT_FOUND",
 					"errmsg": "parent event not found",
 				})
 				return
