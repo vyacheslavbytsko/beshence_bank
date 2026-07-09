@@ -518,10 +518,12 @@ func fetchEventsAfterCursor(db *gorm.DB, vaultID uuid.UUID, chainName string, pa
 	if parentID == nil {
 		query := fmt.Sprintf(`
 WITH RECURSIVE event_chain AS (
-    SELECT e.*
-    FROM %s AS e
-    WHERE e.vault_id = ? AND e.chain_name = ? AND e.parent_id IS NULL
-    LIMIT 1
+	(
+		SELECT e.*
+		FROM %s AS e
+		WHERE e.vault_id = ? AND e.chain_name = ? AND e.parent_id IS NULL
+		LIMIT 1
+	)
 
     UNION ALL
 
@@ -547,10 +549,12 @@ LIMIT ?`, tableName, tableName)
 
 	query := fmt.Sprintf(`
 WITH RECURSIVE event_chain AS (
-    SELECT e.*
-    FROM %s AS e
-    WHERE e.vault_id = ? AND e.chain_name = ? AND e.id = ?
-    LIMIT 1
+	(
+		SELECT e.*
+		FROM %s AS e
+		WHERE e.vault_id = ? AND e.chain_name = ? AND e.id = ?
+		LIMIT 1
+	)
 
     UNION ALL
 
