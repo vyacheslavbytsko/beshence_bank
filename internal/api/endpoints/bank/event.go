@@ -24,7 +24,7 @@ type addEventRequest struct {
 }
 
 type eventsRequest struct {
-	ParentID string `json:"parent_id" form:"parent_id"`
+	AfterID string `json:"after" form:"after"`
 }
 
 type eventsResponse struct {
@@ -482,7 +482,7 @@ func AddEventV1(deps *api.Dependencies) gin.HandlerFunc {
 }
 
 func parseFetchCursor(request eventsRequest) (*uuid.UUID, error) {
-	rawCursor := request.ParentID
+	rawCursor := request.AfterID
 
 	if rawCursor == "" {
 		return nil, nil
