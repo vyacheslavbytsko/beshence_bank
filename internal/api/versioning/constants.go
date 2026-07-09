@@ -28,7 +28,8 @@ func GetVersionedEndpoints(deps *api.Dependencies) VersionedEndpoints {
 	return VersionedEndpoints{
 		VersionV1dot0dot0: {
 			http.MethodGet: {
-				"/ping":                 misc.PingV1(supportedVersions),
+				"/ping":                 misc.PingV1(deps, supportedVersions),
+				"/ek":                   misc.EKV1(deps),
 				"/auth/me":              middleware.RequireAuth(deps.AccessJWTManager, auth.TokenTypeAccess, authend.MeV1(deps)),
 				"/auth/refresh":         middleware.RequireAuth(deps.RefreshJWTManager, auth.TokenTypeRefresh, authend.RefreshV1(deps)),
 				"/vault":                middleware.RequireAuth(deps.AccessJWTManager, auth.TokenTypeAccess, bank.VaultsV1(deps)),
