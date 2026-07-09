@@ -33,7 +33,7 @@ func loadOrGenerateBankKeypair(db *gorm.DB) (*mlkem.DecapsulationKey1024, *mlkem
 
 	switch {
 	case err == nil:
-		raw, err := base64.RawURLEncoding.DecodeString(setting.Value)
+		raw, err := base64.StdEncoding.DecodeString(setting.Value)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -51,7 +51,7 @@ func loadOrGenerateBankKeypair(db *gorm.DB) (*mlkem.DecapsulationKey1024, *mlkem
 
 		err = db.Create(&models.Setting{
 			Key:   keyName,
-			Value: base64.RawURLEncoding.EncodeToString(decapsulationKey.Bytes()),
+			Value: base64.StdEncoding.EncodeToString(decapsulationKey.Bytes()),
 		}).Error
 
 		if err != nil {
