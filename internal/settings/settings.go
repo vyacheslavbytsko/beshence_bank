@@ -89,12 +89,12 @@ func GetBankEncapsulationKey(db *gorm.DB) (*mlkem.EncapsulationKey1024, error) {
 func GetBankEncapsulationKeyBase64(db *gorm.DB) string {
 	bankEncapsulationKeyBase64Once.Do(func() {
 		key, _ := GetBankEncapsulationKey(db)
-		bankEncapsulationKeyBase64 = base64.StdEncoding.EncodeToString(key.Bytes())
+		bankEncapsulationKeyBase64 = base64.RawURLEncoding.EncodeToString(key.Bytes())
 	})
 	return bankEncapsulationKeyBase64
 }
 
-func generateBankID(key *mlkem.EncapsulationKey1024) string {
+func getBankID(key *mlkem.EncapsulationKey1024) string {
 	h := sha3.New256()
 
 	h.Write([]byte("BESHENCE-BANK-ID-V1"))
@@ -105,14 +105,14 @@ func generateBankID(key *mlkem.EncapsulationKey1024) string {
 	return strings.ToLower(encodedStr)
 }
 
-func generateBankIDOnce(db *gorm.DB) {
+func getBankIDOnce(db *gorm.DB) {
 	bankIDOnce.Do(func() {
 		key, _ := GetBankEncapsulationKey(db)
-		bankID = generateBankID(key)
+		bankID = getBankID(key)
 	})
 }
 
 func GetBankID(db *gorm.DB) string {
-	generateBankIDOnce(db)
+	getBankIDOnce(db)
 	return bankID
 }
