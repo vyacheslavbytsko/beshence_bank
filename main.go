@@ -49,13 +49,6 @@ func main() {
 		MaxAge:          24 * time.Hour,
 	}))
 
-	router.GET("/.well-known/beshence/bank", func(c *gin.Context) {
-		c.Request.URL.Path = "/api/ping"
-		c.Request.URL.RawPath = ""
-
-		router.HandleContext(c)
-	})
-
 	dependencies := api.NewDependencies(
 		db,
 		refreshJWT,
