@@ -13,8 +13,3 @@ services:
       - "${HOST_PORT:-27462}:27462"
     # or use network_mode: "host"
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:27462/.well-known/beshence/bank || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
