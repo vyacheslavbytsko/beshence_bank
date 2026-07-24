@@ -16,33 +16,41 @@ var (
 func InitAPIUrls(port string) {
 	urls := make([]string, 0)
 
-	// localhost
-	urls = append(urls, "http://127.0.0.1:"+port+"/api")
+	publishLocalIPs := os.Getenv("BANK_PUBLISH_LOCAL_IPS")
+	publishLocalIPsBool := true
+	if publishLocalIPs == "false" || publishLocalIPs == "0" {
+		publishLocalIPsBool = false
+	}
 
-	// local IPs
-	ifaces, err := net.Interfaces()
-	if err == nil {
-		for _, iface := range ifaces {
-			addrs, err := iface.Addrs()
-			if err != nil {
-				continue
-			}
+	if publishLocalIPsBool {
+		// localhost
+		urls = append(urls, "http://127.0.0.1:"+port+"/api")
 
-			for _, addr := range addrs {
-				ip, _, err := net.ParseCIDR(addr.String())
+		// local IPs
+		ifaces, err := net.Interfaces()
+		if err == nil {
+			for _, iface := range ifaces {
+				addrs, err := iface.Addrs()
 				if err != nil {
 					continue
 				}
 
-				ipv4 := ip.To4()
-				if ipv4 == nil {
-					continue
-				}
+				for _, addr := range addrs {
+					ip, _, err := net.ParseCIDR(addr.String())
+					if err != nil {
+						continue
+					}
 
-				url := "http://" + ipv4.String() + ":" + port + "/api"
+					ipv4 := ip.To4()
+					if ipv4 == nil {
+						continue
+					}
 
-				if !contains(urls, url) {
-					urls = append(urls, url)
+					url := "http://" + ipv4.String() + ":" + port + "/api"
+
+					if !contains(urls, url) {
+						urls = append(urls, url)
+					}
 				}
 			}
 		}
