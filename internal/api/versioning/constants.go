@@ -32,10 +32,10 @@ func GetVersionedEndpoints(deps *api.Dependencies) VersionedEndpoints {
 				"/ek":                   misc.EKV1(deps),
 				"/auth/me":              middleware.RequireAuth(deps.AccessJWTManager, auth.TokenTypeAccess, authend.MeV1(deps)),
 				"/auth/refresh":         middleware.RequireAuth(deps.RefreshJWTManager, auth.TokenTypeRefresh, authend.RefreshV1(deps)),
-				"/vault":                middleware.RequireAuth(deps.AccessJWTManager, auth.TokenTypeAccess, bank.VaultsV1(deps)),
-				"/vault/:vaultId/chain": middleware.RequireAuth(deps.AccessJWTManager, auth.TokenTypeAccess, bank.ChainsV1(deps)),
+				"/vaults":                middleware.RequireAuth(deps.AccessJWTManager, auth.TokenTypeAccess, bank.VaultsV1(deps)),
+				"/vault/:vaultId/chains": middleware.RequireAuth(deps.AccessJWTManager, auth.TokenTypeAccess, bank.ChainsV1(deps)),
 				"/vault/:vaultId/" +
-					"chain/:chainName/event": middleware.RequireAuth(deps.AccessJWTManager, auth.TokenTypeAccess, bank.EventsV1(deps)),
+					"chain/:chainName/events": middleware.RequireAuth(deps.AccessJWTManager, auth.TokenTypeAccess, bank.EventsV1(deps)),
 				"/vault/:vaultId/" +
 					"chain/:chainName/event/last": middleware.RequireAuth(deps.AccessJWTManager, auth.TokenTypeAccess, bank.LastEventV1(deps)),
 			},
